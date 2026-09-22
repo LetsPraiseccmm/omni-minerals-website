@@ -7,6 +7,7 @@
 :root{--orange:#c9440c}
 .site-header .brand img{object-fit:contain;object-position:left center}
 .cookie-dialog{max-height:calc(100svh - 32px);overflow:auto}
+.cookie-banner[hidden]{display:none!important}
 .cookie-dialog.is-open{display:block;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:90}
 body.cookies-visible .contact-launcher{bottom:120px}
 @media(max-width:760px){
