@@ -1,181 +1,170 @@
-// Add official Omni Minerals contact details here.
-const OMNI_CONTACT = { whatsapp: '', phone: '', facebook: '', instagram: '' };
+const OMNI_CONTACT = {
+  whatsapp: "260776833956",
+  phone: "+260776833956",
+  email: "info@omniminerals.co.zm",
+  facebook: "",
+  instagram: ""
+};
 
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const header = document.querySelector('.site-header');
 const progress = document.querySelector('.scroll-progress');
 const menuButton = document.querySelector('.menu-toggle');
 const nav = document.querySelector('.nav');
 const launcher = document.querySelector('.contact-launcher');
 const launcherButton = document.querySelector('.launcher-button');
-const hero = document.querySelector('.hero');
-const heroMedia = document.querySelector('.hero-media');
-const canAnimate = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const wideViewport = window.matchMedia('(min-width: 761px)');
-document.body.classList.add('motion-ready');
+
+if (!reducedMotion) document.body.classList.add('motion-ready');
 
 function updateScrollEffects() {
-  const scrollY = window.scrollY;
-  header.classList.toggle('scrolled', scrollY > 24);
-  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
-  progress.style.setProperty('--progress', `${scrollable ? (scrollY / scrollable) * 100 : 0}%`);
-  if (canAnimate && wideViewport.matches && scrollY < hero.offsetHeight) {
-    heroMedia.style.transform = `translateY(${scrollY * 0.14}px) scale(1.015)`;
-    hero.querySelector('.hero-content').style.transform = `translateY(${-scrollY * 0.06}px)`;
+  if (!header) return;
+  header.classList.toggle('scrolled', window.scrollY > 24);
+  if (progress) {
+    const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+    progress.style.setProperty('--progress', `${scrollable ? (window.scrollY / scrollable) * 100 : 0}%`);
   }
 }
-
 updateScrollEffects();
 window.addEventListener('scroll', () => requestAnimationFrame(updateScrollEffects), { passive: true });
-window.addEventListener('resize', updateScrollEffects, { passive: true });
 
 function closeMenu() {
+  if (!nav || !menuButton) return;
   nav.classList.remove('open');
+  header?.classList.remove('menu-active');
   menuButton.setAttribute('aria-expanded', 'false');
   menuButton.setAttribute('aria-label', 'Open navigation');
+  document.body.classList.remove('menu-open');
 }
 
-menuButton.addEventListener('click', () => {
-  const isOpen = nav.classList.toggle('open');
+function toggleMenu() {
+  if (!nav || !menuButton) return;
+  const isOpen = !nav.classList.contains('open');
+  nav.classList.toggle('open', isOpen);
+  header?.classList.toggle('menu-active', isOpen);
   menuButton.setAttribute('aria-expanded', String(isOpen));
   menuButton.setAttribute('aria-label', isOpen ? 'Close navigation' : 'Open navigation');
+  document.body.classList.toggle('menu-open', isOpen);
+}
+
+menuButton?.addEventListener('click', toggleMenu);
+nav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
+document.addEventListener('click', (event) => {
+  if (nav?.classList.contains('open') && header && !header.contains(event.target)) closeMenu();
 });
-nav.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     closeMenu();
-    launcher.dataset.expanded = 'false';
-    launcherButton.setAttribute('aria-expanded', 'false');
+    setLauncher(false);
+    document.querySelector('.cookie-dialog')?.close();
   }
 });
 
-const observer = new IntersectionObserver((entries) => {
+function setLauncher(open) {
+  if (!launcher || !launcherButton) return;
+  launcher.dataset.expanded = String(open);
+  launcherButton.setAttribute('aria-expanded', String(open));
+  launcherButton.setAttribute('aria-label', open ? 'Close contact options' : 'Open contact options');
+}
+
+function configureContactActions() {
+  document.querySelectorAll('[data-contact]').forEach((action) => {
+    const type = action.dataset.contact;
+    if (type === 'whatsapp') action.href = `https://wa.me/${OMNI_CONTACT.whatsapp}?text=${encodeURIComponent('Hello Omni Minerals, I would like to make an enquiry about your services.')}`;
+    if (type === 'phone') action.href = `tel:${OMNI_CONTACT.phone}`;
+    if (type === 'email') action.href = `mailto:${OMNI_CONTACT.email}`;
+  });
+}
+configureContactActions();
+launcherButton?.addEventListener('click', () => setLauncher(launcher.dataset.expanded !== 'true'));
+document.addEventListener('click', (event) => {
+  if (launcher?.dataset.expanded === 'true' && !launcher.contains(event.target)) setLauncher(false);
+});
+
+const observer = 'IntersectionObserver' in window && !reducedMotion ? new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     if (entry.isIntersecting) {
       entry.target.classList.add('visible');
       observer.unobserve(entry.target);
     }
   });
-}, { threshold: 0.12 });
-document.querySelectorAll('.reveal, .market-visual').forEach((item) => observer.observe(item));
+}, { threshold: 0.12 }) : null;
+document.querySelectorAll('.reveal, .market-visual').forEach((item) => observer ? observer.observe(item) : item.classList.add('visible'));
 
 function fieldMessage(field, message = '') {
   const label = field.closest('label');
+  if (!label) return !message;
   let output = label.querySelector('.field-error');
-  if (!output) {
-    output = document.createElement('span');
-    output.className = 'field-error';
-    output.setAttribute('aria-live', 'polite');
-    label.append(output);
-  }
+  if (!output) { output = document.createElement('span'); output.className = 'field-error'; output.setAttribute('role', 'alert'); label.append(output); }
   output.textContent = message;
   label.classList.toggle('field-invalid', Boolean(message));
-  label.classList.toggle('field-valid', !message && field.value.trim() !== '');
   field.setAttribute('aria-invalid', String(Boolean(message)));
   return !message;
 }
 
 function validateField(field) {
-  const label = field.closest('label');
-  const name = label.firstChild.textContent.trim();
+  if (field.type === 'checkbox') return fieldMessage(field, field.required && !field.checked ? 'Please acknowledge the Privacy Policy.' : '');
+  if (field.name === '_website') return true;
   let error = '';
-  if (field.required && !field.value.trim()) error = `Please enter your ${name.toLowerCase()}.`;
-  if (!error && field.type === 'email' && field.value && !field.validity.valid) error = 'Please enter a valid email address.';
-  if (!error && field.type === 'file' && field.files.length) {
-    const file = field.files[0];
-    const extension = file.name.split('.').pop().toLowerCase();
-    if (!['pdf', 'doc', 'docx'].includes(extension)) error = 'Please choose a PDF, DOC or DOCX file.';
-    if (!error && file.size > 10 * 1024 * 1024) error = 'Please choose a file smaller than 10 MB.';
-  }
+  const value = field.value.trim();
+  if (field.required && !value) error = `Please enter your ${field.closest('label')?.firstChild?.textContent?.trim().toLowerCase() || 'answer'}.`;
+  if (!error && field.type === 'email' && !field.validity.valid) error = 'Please enter a valid email address.';
+  if (!error && field.name === 'message' && value.length > 2000) error = 'Please keep your message under 2,000 characters.';
+  if (!error && field.name === 'phone' && value && !/^[+\d\s().-]{7,30}$/.test(value)) error = 'Please enter a valid phone number.';
   return fieldMessage(field, error);
+}
+
+function formFeedback(form, text, type) {
+  const message = form.querySelector('.form-message');
+  if (message) { message.textContent = text; message.className = `form-message is-${type}`; }
 }
 
 document.querySelectorAll('form').forEach((form) => {
   const fields = [...form.querySelectorAll('input, select, textarea')];
+  const startField = form.elements.formStartedAt;
+  if (startField) startField.value = String(Date.now());
   fields.forEach((field) => {
     field.addEventListener('blur', () => validateField(field));
-    field.addEventListener('input', () => {
-      if (field.getAttribute('aria-invalid') === 'true') validateField(field);
-    });
-    if (field.type === 'file') field.addEventListener('change', () => {
-      validateField(field);
-      const label = field.closest('label');
-      let filename = label.querySelector('.selected-file');
-      if (!filename) {
-        filename = document.createElement('span');
-        filename.className = 'selected-file';
-        label.append(filename);
-      }
-      filename.textContent = field.files.length ? field.files[0].name : 'No file selected.';
-    });
+    field.addEventListener('input', () => { if (field.getAttribute('aria-invalid') === 'true') validateField(field); });
   });
-  form.addEventListener('submit', (event) => {
+  form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    const valid = fields.every(validateField);
-    const message = form.querySelector('.form-message');
-    if (!valid) {
-      message.textContent = 'Please review the highlighted fields and try again.';
-      message.className = 'form-message is-error';
-      form.querySelector('[aria-invalid="true"]').focus();
+    const valid = fields.filter((field) => field.name !== '_website' && field.type !== 'hidden').every(validateField);
+    if (!valid) { formFeedback(form, 'Please review the highlighted fields and try again.', 'error'); form.querySelector('[aria-invalid="true"]')?.focus(); return; }
+    if (form.matches('[data-contact-form]')) {
+      if (form.elements._website.value) return;
+      const payload = Object.fromEntries(new FormData(form).entries());
+      payload.consent = form.elements.consent.checked;
+      try {
+        form.classList.add('form-submitting');
+        const response = await fetch(form.action, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(payload) });
+        if (!response.ok) throw new Error('Contact endpoint unavailable');
+        form.reset();
+        formFeedback(form, 'Thank you. Your enquiry has been sent to Omni Minerals.', 'success');
+      } catch {
+        formFeedback(form, `The secure enquiry channel is being configured. Please email ${OMNI_CONTACT.email} or use WhatsApp.`, 'error');
+      } finally { form.classList.remove('form-submitting'); }
       return;
     }
-    const button = form.querySelector('button[type="submit"]');
-    const originalLabel = button.innerHTML;
-    form.classList.add('form-submitting');
-    button.innerHTML = '<span>Processing</span>';
-    window.setTimeout(() => {
-      form.classList.remove('form-submitting');
-      button.innerHTML = originalLabel;
-      message.textContent = 'Your enquiry has been captured. Our team will be in touch once the enquiry channel is connected.';
-      message.className = 'form-message is-success';
-      form.reset();
-      form.querySelectorAll('.field-valid').forEach((item) => item.classList.remove('field-valid'));
-      form.querySelectorAll('.selected-file').forEach((item) => item.remove());
-    }, 450);
+    formFeedback(form, 'Thank you. Your interest has been recorded for follow-up.', 'success');
+    form.reset();
   });
 });
 
-function configureContactActions() {
-  const configured = Object.values(OMNI_CONTACT).some(Boolean);
-  if (!configured) {
-    launcher.hidden = true;
-    return;
-  }
-  const message = encodeURIComponent('Hello Omni Minerals, I would like to enquire about your mining and industrial solutions.');
-  document.querySelectorAll('[data-contact]').forEach((action) => {
-    const type = action.dataset.contact;
-    const value = OMNI_CONTACT[type];
-    if (!value || type === 'whatsapp') return;
-    action.classList.remove('is-hidden');
-    action.href = type === 'phone' ? `tel:${value}` : value;
-  });
-  if (OMNI_CONTACT.whatsapp) {
-    const whatsapp = document.createElement('a');
-    whatsapp.className = 'floating-action';
-    whatsapp.href = `https://wa.me/${OMNI_CONTACT.whatsapp}?text=${message}`;
-    whatsapp.target = '_blank';
-    whatsapp.rel = 'noopener noreferrer';
-    whatsapp.setAttribute('aria-label', 'Chat with Omni Minerals on WhatsApp');
-    whatsapp.dataset.tooltip = 'Chat on WhatsApp';
-    whatsapp.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.8a8 8 0 0 1-11.8 7L4 20l1.3-4.1A8 8 0 1 1 20 11.8Z"></path><path d="M9 8.5c.2-.5.4-.5.7-.5h.5c.2 0 .4.1.5.4l.7 1.6c.1.2.1.4 0 .6l-.5.7c.5 1 1.3 1.8 2.3 2.3l.7-.5c.2-.1.4-.1.6 0l1.6.7c.3.1.4.3.4.5v.5c0 .3 0 .5-.5.7-.5.2-1.5.2-2.7-.4-1-.5-2.2-1.5-3.1-2.9-.8-1.3-1.2-2.5-1.2-3.3 0-.3 0-.6.1-.8Z"></path></svg>';
-    launcher.querySelector('.contact-actions').prepend(whatsapp);
-  }
+if (!document.querySelector('.cookie-banner')) {
+  document.body.insertAdjacentHTML('beforeend', '<div class="cookie-banner" hidden><p><b>Privacy-friendly cookies</b> We use essential cookies required for the website to function. With your permission, we may also use optional cookies for analytics or other purposes.</p><div><button type="button" data-cookie-action="accept">Accept All</button><button type="button" data-cookie-action="reject">Reject Non-Essential</button><button type="button" data-cookie-action="settings">Cookie Settings</button></div></div><dialog class="cookie-dialog" aria-labelledby="cookie-dialog-title"><form method="dialog"><h2 id="cookie-dialog-title">Cookie Settings</h2><p>Choose whether to allow optional cookies. No analytics or marketing scripts are installed at present.</p><label><input type="checkbox" checked disabled> Necessary cookies <small>Required for core website functions.</small></label><label><input type="checkbox" data-cookie-category="analytics"> Analytics cookies <small>Currently not used.</small></label><label><input type="checkbox" data-cookie-category="marketing"> Marketing cookies <small>Currently not used.</small></label><div class="dialog-actions"><button value="cancel">Cancel</button><button value="save" data-cookie-action="save">Save Preferences</button></div></form></dialog>');
 }
-
-configureContactActions();
-launcherButton.addEventListener('click', () => {
-  const isExpanded = launcher.dataset.expanded === 'true';
-  launcher.dataset.expanded = String(!isExpanded);
-  launcherButton.setAttribute('aria-expanded', String(!isExpanded));
+const cookieKey = 'omni-cookie-preferences';
+const banner = document.querySelector('.cookie-banner');
+const dialog = document.querySelector('.cookie-dialog');
+function readCookies() { try { return JSON.parse(localStorage.getItem(cookieKey)); } catch { return null; } }
+function saveCookies(preferences) { localStorage.setItem(cookieKey, JSON.stringify({ necessary: true, analytics: false, marketing: false, ...preferences })); if (banner) banner.hidden = true; }
+function openCookieSettings() { if (dialog?.showModal) dialog.showModal(); }
+const currentCookies = readCookies();
+if (!currentCookies && banner) banner.hidden = false;
+document.querySelectorAll('[data-cookie-action="accept"]').forEach((button) => button.addEventListener('click', () => saveCookies({ analytics: true, marketing: true })));
+document.querySelectorAll('[data-cookie-action="reject"]').forEach((button) => button.addEventListener('click', () => saveCookies({ analytics: false, marketing: false })));
+document.querySelectorAll('[data-cookie-action="settings"], .footer-cookie-settings').forEach((button) => button.addEventListener('click', openCookieSettings));
+dialog?.addEventListener('close', () => {
+  if (dialog.returnValue !== 'save') return;
+  saveCookies({ analytics: Boolean(dialog.querySelector('[data-cookie-category="analytics"]')?.checked), marketing: Boolean(dialog.querySelector('[data-cookie-category="marketing"]')?.checked) });
 });
-if (wideViewport.matches) {
-  launcher.addEventListener('mouseenter', () => {
-    if (launcher.querySelector('.contact-actions a:not(.is-hidden)')) {
-      launcher.dataset.expanded = 'true';
-      launcherButton.setAttribute('aria-expanded', 'true');
-    }
-  });
-  launcher.addEventListener('mouseleave', () => {
-    launcher.dataset.expanded = 'false';
-    launcherButton.setAttribute('aria-expanded', 'false');
-  });
-}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Replace [FINAL-PRODUCTION-DOMAIN] after the production domain is confirmed. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://[FINAL-PRODUCTION-DOMAIN]/</loc></url>
+  <url><loc>https://[FINAL-PRODUCTION-DOMAIN]/privacy-policy.html</loc></url>
+  <url><loc>https://[FINAL-PRODUCTION-DOMAIN]/terms-and-conditions.html</loc></url>
+  <url><loc>https://[FINAL-PRODUCTION-DOMAIN]/refund-policy.html</loc></url>
+  <url><loc>https://[FINAL-PRODUCTION-DOMAIN]/cookie-policy.html</loc></url>
+</urlset>
