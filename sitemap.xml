@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Replace [FINAL-PRODUCTION-DOMAIN] after the production domain is confirmed. -->
+<!-- Production domain: omniminerals.co.zm -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://[FINAL-PRODUCTION-DOMAIN]/</loc></url>
-  <url><loc>https://[FINAL-PRODUCTION-DOMAIN]/privacy-policy.html</loc></url>
-  <url><loc>https://[FINAL-PRODUCTION-DOMAIN]/terms-and-conditions.html</loc></url>
-  <url><loc>https://[FINAL-PRODUCTION-DOMAIN]/refund-policy.html</loc></url>
-  <url><loc>https://[FINAL-PRODUCTION-DOMAIN]/cookie-policy.html</loc></url>
+  <url><loc>https://omniminerals.co.zm/</loc></url>
+  <url><loc>https://omniminerals.co.zm/privacy-policy.html</loc></url>
+  <url><loc>https://omniminerals.co.zm/terms-and-conditions.html</loc></url>
+  <url><loc>https://omniminerals.co.zm/refund-policy.html</loc></url>
+  <url><loc>https://omniminerals.co.zm/cookie-policy.html</loc></url>
+  <url><loc>https://omniminerals.co.zm/mineral-commodities.html</loc></url>
+  <url><loc>https://omniminerals.co.zm/industrial-minerals.html</loc></url>
+  <url><loc>https://omniminerals.co.zm/equipment.html</loc></url>
 </urlset>

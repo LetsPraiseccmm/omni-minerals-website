@@ -150,24 +150,34 @@ document.querySelectorAll('form').forEach((form) => {
   });
 });
 
-if (!document.querySelector('.cookie-banner')) {
-  document.body.insertAdjacentHTML('beforeend', '<div class="cookie-banner" hidden><p><b>Privacy-friendly cookies</b> We use essential cookies required for the website to function. With your permission, we may also use optional cookies for analytics or other purposes.</p><div><button type="button" data-cookie-action="accept">Accept All</button><button type="button" data-cookie-action="reject">Reject Non-Essential</button><button type="button" data-cookie-action="settings">Cookie Settings</button></div></div><dialog class="cookie-dialog" aria-labelledby="cookie-dialog-title"><form method="dialog"><h2 id="cookie-dialog-title">Cookie Settings</h2><p>Choose whether to allow optional cookies. No analytics or marketing scripts are installed at present.</p><label><input type="checkbox" checked disabled> Necessary cookies <small>Required for core website functions.</small></label><label><input type="checkbox" data-cookie-category="analytics"> Analytics cookies <small>Currently not used.</small></label><label><input type="checkbox" data-cookie-category="marketing"> Marketing cookies <small>Currently not used.</small></label><div class="dialog-actions"><button value="cancel">Cancel</button><button value="save" data-cookie-action="save">Save Preferences</button></div></form></dialog>');
-}
 const cookieKey = 'omni-cookie-preferences';
+const cookieMarkup = '<div class="cookie-banner" hidden><p><b>Privacy-friendly cookies</b> We use essential cookies to keep the website working. Optional cookies are used only with your permission.</p><div><button type="button" data-cookie-action="accept">Accept All</button><button type="button" data-cookie-action="reject">Reject Non-Essential</button><button type="button" data-cookie-action="settings">Cookie Settings</button></div></div><dialog class="cookie-dialog" aria-labelledby="cookie-dialog-title"><form method="dialog"><h2 id="cookie-dialog-title">Cookie Settings</h2><p>Choose whether to allow optional cookie preferences. No analytics or marketing scripts are installed at present.</p><label><input type="checkbox" checked disabled> Necessary cookies <small>Required for core website functions.</small></label><label><input type="checkbox" data-cookie-category="analytics"> Analytics cookies <small>Currently not used.</small></label><label><input type="checkbox" data-cookie-category="marketing"> Marketing cookies <small>Currently not used.</small></label><div class="dialog-actions"><button type="button" value="cancel">Cancel</button><button type="button" value="save" data-cookie-action="save">Save Preferences</button></div></form></dialog>';
+if (!document.querySelector('.cookie-banner')) document.body.insertAdjacentHTML('beforeend', cookieMarkup);
 const banner = document.querySelector('.cookie-banner');
 const dialog = document.querySelector('.cookie-dialog');
 const cookieMessage = document.querySelector('.cookie-banner p');
 if (cookieMessage) cookieMessage.innerHTML = '<b>Privacy-friendly cookies</b> We use essential cookies to keep the website working. Optional cookies are used only with your permission.';
 function readCookies() { try { return JSON.parse(localStorage.getItem(cookieKey)); } catch { return null; } }
-function saveCookies(preferences) { localStorage.setItem(cookieKey, JSON.stringify({ necessary: true, analytics: false, marketing: false, ...preferences })); if (banner) banner.hidden = true; document.body.classList.remove('cookies-visible'); }
-function openCookieSettings() { if (dialog?.showModal) dialog.showModal(); }
+function setBannerVisible(visible) { if (banner) banner.hidden = !visible; document.body.classList.toggle('cookies-visible', visible); }
+function saveCookies(preferences) { try { localStorage.setItem(cookieKey, JSON.stringify({ necessary: true, analytics: false, marketing: false, ...preferences })); } catch {} setBannerVisible(false); }
+function syncCookieControls(preferences = readCookies() || {}) { const analytics = dialog?.querySelector('[data-cookie-category="analytics"]'); const marketing = dialog?.querySelector('[data-cookie-category="marketing"]'); if (analytics) analytics.checked = preferences.analytics === true; if (marketing) marketing.checked = preferences.marketing === true; }
+function openCookieSettings() { if (!dialog?.showModal || dialog.open) return; syncCookieControls(); dialog.showModal(); }
 const currentCookies = readCookies();
-if (!currentCookies && banner) banner.hidden = false;
-document.body.classList.toggle('cookies-visible', Boolean(banner && !banner.hidden));
-document.querySelectorAll('[data-cookie-action="accept"]').forEach((button) => button.addEventListener('click', () => saveCookies({ analytics: true, marketing: true })));
-document.querySelectorAll('[data-cookie-action="reject"]').forEach((button) => button.addEventListener('click', () => saveCookies({ analytics: false, marketing: false })));
-document.querySelectorAll('[data-cookie-action="settings"], .footer-cookie-settings').forEach((button) => button.addEventListener('click', openCookieSettings));
-dialog?.addEventListener('close', () => {
-  if (dialog.returnValue !== 'save') return;
-  saveCookies({ analytics: Boolean(dialog.querySelector('[data-cookie-category="analytics"]')?.checked), marketing: Boolean(dialog.querySelector('[data-cookie-category="marketing"]')?.checked) });
+setBannerVisible(!currentCookies);
+document.addEventListener('click', (event) => {
+  const action = event.target.closest('[data-cookie-action], .footer-cookie-settings');
+  if (!action) return;
+  event.preventDefault();
+  if (action.matches('.footer-cookie-settings, [data-cookie-action="settings"]')) return openCookieSettings();
+  if (action.matches('[data-cookie-action="accept"]')) return saveCookies({ analytics: true, marketing: true });
+  if (action.matches('[data-cookie-action="reject"]')) return saveCookies({ analytics: false, marketing: false });
+  if (action.matches('[data-cookie-action="save"]')) {
+    saveCookies({ analytics: Boolean(dialog?.querySelector('[data-cookie-category="analytics"]')?.checked), marketing: Boolean(dialog?.querySelector('[data-cookie-category="marketing"]')?.checked) });
+    if (dialog?.open) dialog.close('save');
+    return;
+  }
+  if (dialog && action.form === dialog.querySelector('form') && action.value === 'cancel') {
+    if (dialog.open) dialog.close('cancel');
+  }
 });
+dialog?.addEventListener('cancel', () => { document.body.classList.remove('menu-open'); });

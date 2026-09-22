@@ -2,5 +2,5 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-# Replace [FINAL-PRODUCTION-DOMAIN] after the production domain is confirmed.
-Sitemap: https://[FINAL-PRODUCTION-DOMAIN]/sitemap.xml
+# Production domain: omniminerals.co.zm
+Sitemap: https://omniminerals.co.zm/sitemap.xml
