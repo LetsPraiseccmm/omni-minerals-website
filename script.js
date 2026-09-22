@@ -161,11 +161,13 @@ function readCookies() { try { return JSON.parse(localStorage.getItem(cookieKey)
 function setBannerVisible(visible) { if (banner) banner.hidden = !visible; document.body.classList.toggle('cookies-visible', visible); }
 function saveCookies(preferences) { try { localStorage.setItem(cookieKey, JSON.stringify({ necessary: true, analytics: false, marketing: false, ...preferences })); } catch {} setBannerVisible(false); }
 function syncCookieControls(preferences = readCookies() || {}) { const analytics = dialog?.querySelector('[data-cookie-category="analytics"]'); const marketing = dialog?.querySelector('[data-cookie-category="marketing"]'); if (analytics) analytics.checked = preferences.analytics === true; if (marketing) marketing.checked = preferences.marketing === true; }
-function openCookieSettings() { if (!dialog?.showModal || dialog.open) return; syncCookieControls(); dialog.showModal(); }
+function openCookieSettings() { if (!dialog || dialog.open) return; syncCookieControls(); if (typeof dialog.showModal === 'function') dialog.showModal(); else { dialog.setAttribute('open', ''); dialog.classList.add('is-open'); } }
+function closeCookieSettings(returnValue = 'cancel') { if (!dialog) return; if (typeof dialog.close === 'function' && dialog.open) dialog.close(returnValue); else { dialog.removeAttribute('open'); dialog.classList.remove('is-open'); } }
 const currentCookies = readCookies();
 setBannerVisible(!currentCookies);
 document.addEventListener('click', (event) => {
-  const action = event.target.closest('[data-cookie-action], .footer-cookie-settings');
+  const target = event.target;
+  const action = target && typeof target.closest === 'function' ? target.closest('[data-cookie-action], .footer-cookie-settings') : null;
   if (!action) return;
   event.preventDefault();
   if (action.matches('.footer-cookie-settings, [data-cookie-action="settings"]')) return openCookieSettings();
@@ -173,11 +175,11 @@ document.addEventListener('click', (event) => {
   if (action.matches('[data-cookie-action="reject"]')) return saveCookies({ analytics: false, marketing: false });
   if (action.matches('[data-cookie-action="save"]')) {
     saveCookies({ analytics: Boolean(dialog?.querySelector('[data-cookie-category="analytics"]')?.checked), marketing: Boolean(dialog?.querySelector('[data-cookie-category="marketing"]')?.checked) });
-    if (dialog?.open) dialog.close('save');
+    closeCookieSettings('save');
     return;
   }
   if (dialog && action.form === dialog.querySelector('form') && action.value === 'cancel') {
-    if (dialog.open) dialog.close('cancel');
+    closeCookieSettings('cancel');
   }
 });
 dialog?.addEventListener('cancel', () => { document.body.classList.remove('menu-open'); });

@@ -7,6 +7,7 @@
 :root{--orange:#c9440c}
 .site-header .brand img{object-fit:contain;object-position:left center}
 .cookie-dialog{max-height:calc(100svh - 32px);overflow:auto}
+.cookie-dialog.is-open{display:block;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:90}
 body.cookies-visible .contact-launcher{bottom:120px}
 @media(max-width:760px){
   .site-header{background:var(--navy);border-color:#ffffff22}
@@ -23,6 +24,9 @@ body.cookies-visible .contact-launcher{bottom:120px}
 }
 @media(max-width:380px){.hero{padding-top:100px;padding-bottom:56px}.hero-content{padding-top:18px}}
 @media(max-width:340px){.cookie-banner>div{grid-template-columns:1fr}.cookie-banner button:last-child{grid-column:auto}}
+.contact-actions .floating-action{opacity:1;transform:none;pointer-events:auto}
+.contact-actions .whatsapp{background:var(--orange)}
+.contact-launcher .launcher-button{display:none}
 .service-page{background:#f7f8f8;color:var(--ink)}
 .service-page .site-header{background:var(--navy)}
 .service-hero{min-height:560px;padding:150px clamp(24px,9vw,150px) 90px;background:linear-gradient(110deg,rgba(5,6,7,.94),rgba(8,40,56,.76)),url('assets/mineral-material-feature.jpg') center/cover;color:#fff}
