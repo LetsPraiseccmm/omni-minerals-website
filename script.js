@@ -156,11 +156,14 @@ if (!document.querySelector('.cookie-banner')) {
 const cookieKey = 'omni-cookie-preferences';
 const banner = document.querySelector('.cookie-banner');
 const dialog = document.querySelector('.cookie-dialog');
+const cookieMessage = document.querySelector('.cookie-banner p');
+if (cookieMessage) cookieMessage.innerHTML = '<b>Privacy-friendly cookies</b> We use essential cookies to keep the website working. Optional cookies are used only with your permission.';
 function readCookies() { try { return JSON.parse(localStorage.getItem(cookieKey)); } catch { return null; } }
-function saveCookies(preferences) { localStorage.setItem(cookieKey, JSON.stringify({ necessary: true, analytics: false, marketing: false, ...preferences })); if (banner) banner.hidden = true; }
+function saveCookies(preferences) { localStorage.setItem(cookieKey, JSON.stringify({ necessary: true, analytics: false, marketing: false, ...preferences })); if (banner) banner.hidden = true; document.body.classList.remove('cookies-visible'); }
 function openCookieSettings() { if (dialog?.showModal) dialog.showModal(); }
 const currentCookies = readCookies();
 if (!currentCookies && banner) banner.hidden = false;
+document.body.classList.toggle('cookies-visible', Boolean(banner && !banner.hidden));
 document.querySelectorAll('[data-cookie-action="accept"]').forEach((button) => button.addEventListener('click', () => saveCookies({ analytics: true, marketing: true })));
 document.querySelectorAll('[data-cookie-action="reject"]').forEach((button) => button.addEventListener('click', () => saveCookies({ analytics: false, marketing: false })));
 document.querySelectorAll('[data-cookie-action="settings"], .footer-cookie-settings').forEach((button) => button.addEventListener('click', openCookieSettings));
